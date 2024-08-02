@@ -1,5 +1,5 @@
 {
-  "type":"module",
+  "type": "module",
   "scripts": {
     "backend": "nodemon backend/index.js",
     "frontend": "npm start --prefix frontend",
