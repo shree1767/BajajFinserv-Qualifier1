@@ -1,62 +1,127 @@
 // src/App.js
 import React, { useState } from 'react';
 import axios from 'axios';
-import TextInput from './components/TextInput';
-import Dropdown from './components/Dropdown';
+import './App.css';
 
 const App = () => {
   const [response, setResponse] = useState(null);
-  const [selectedOptions, setSelectedOptions] = useState([]);
+  const [input, setInput] = useState('');
+  const [error, setError] = useState('');
+  const [filters, setFilters] = useState({
+    alphabets: false,
+    numbers: false,
+    highestAlphabet: false,
+  });
 
-  const handleFormSubmit = async (inputData) => {
-    try {
-      const parsedData = JSON.parse(inputData);
-      const res = await axios.post('https://bajajfinserv-qualifier1-9.onrender.com/bfhl', parsedData);
-      setResponse(res.data);
-    } catch (error) {
-      console.error('API call failed');
-    }
+  const handleInputChange = (e) => {
+    setInput(e.target.value);
   };
 
-  const handleDropdownChange = (e) => {
-    const options = Array.from(e.target.selectedOptions, option => option.value);
-    setSelectedOptions(options);
+  const handleFilterChange = (e) => {
+    const { name, checked } = e.target;
+    setFilters(prevFilters => ({
+      ...prevFilters,
+      [name]: checked,
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    try {
+      const parsedData = JSON.parse(input);
+      fetch("https://bajajfinserv-qualifier1-9.onrender.com/bfhl", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(parsedData),
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Network response was not ok");
+          }
+          return response.json();
+        })
+        .then((data) => {
+          console.log("Success", data);
+          setResponse(data);
+          setError('');
+        })
+        .catch((error) => {
+          console.error("There was a problem", error);
+          setError('Failed to fetch data from the server.');
+        });
+    } catch (error) {
+      setError('Invalid JSON format');
+    }
   };
 
   const renderResponse = () => {
-    if (response) {
-      return (
-        <div>
-          {selectedOptions.includes('alphabets') && response.alphabets && (
-            <div>Alphabets: {response.alphabets.join(', ')}</div>
-          )}
-          {selectedOptions.includes('numbers') && response.numbers && (
-            <div>Numbers: {response.numbers.join(', ')}</div>
-          )}
-          {selectedOptions.includes('highest_alphabet') && response.highest_alphabet && (
-            <div>Highest Alphabet: {response.highest_alphabet.join(', ')}</div>
-          )}
-        </div>
-      );
-    }
-    return null;
+    if (!response) return null;
+    return (
+      <div className="response-container">
+        {filters.alphabets && response.alphabets && (
+          <p><strong>Alphabets:</strong> {response.alphabets.join(', ')}</p>
+        )}
+        {filters.numbers && response.numbers && (
+          <p><strong>Numbers:</strong> {response.numbers.join(', ')}</p>
+        )}
+        {filters.highestAlphabet && response.highest_alphabet && (
+          <p><strong>Highest Alphabet:</strong> {response.highest_alphabet.join(', ')}</p>
+        )}
+      </div>
+    );
   };
 
   return (
-    <div>
-      <TextInput onSubmit={handleFormSubmit} />
-      <Dropdown
-        options={[
-          { value: 'alphabets', label: 'Alphabets' },
-          { value: 'numbers', label: 'Numbers' },
-          { value: 'highest_alphabet', label: 'Highest Alphabet' }
-        ]}
-        onChange={handleDropdownChange}
-      />
+    <div className="app-container">
+      <h1>Data Processor</h1>
+      <form onSubmit={handleSubmit} className="form-container">
+        <textarea
+          value={input}
+          onChange={handleInputChange}
+          placeholder='Enter JSON here'
+          className="text-input"
+        />
+        <button type='submit' className="submit-button">
+          Submit
+        </button>
+        {error && <p className="error-message">{error}</p>}
+      </form>
+      {response && (
+        <div className="filters-container">
+          <label>
+            <input
+              type="checkbox"
+              name="alphabets"
+              checked={filters.alphabets}
+              onChange={handleFilterChange}
+            />
+            Alphabets
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              name="numbers"
+              checked={filters.numbers}
+              onChange={handleFilterChange}
+            />
+            Numbers
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              name="highestAlphabet"
+              checked={filters.highestAlphabet}
+              onChange={handleFilterChange}
+            />
+            Highest Alphabet
+          </label>
+        </div>
+      )}
       {renderResponse()}
     </div>
   );
 };
 
 export default App;
-
