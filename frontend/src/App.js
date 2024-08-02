@@ -20,7 +20,7 @@ function App() {
       if (!parsedInput.data || !Array.isArray(parsedInput.data)) {
         throw new Error('Invalid JSON format');
       }
-      const res = await fetch('http://localhost:6000/bfhl', {
+      const res = await fetch('http://localhost:5000/bfhl', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
