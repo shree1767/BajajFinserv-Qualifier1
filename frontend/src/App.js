@@ -72,6 +72,7 @@ const App = () => {
     );
   };
 
+  
   return (
     <div className="app-container">
       <h1>Data Processor</h1>
