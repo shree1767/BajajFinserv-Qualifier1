@@ -1,90 +1,62 @@
+// src/App.js
 import React, { useState } from 'react';
-import './App.css';
+import axios from 'axios';
+import TextInput from './components/TextInput';
+import Dropdown from './components/Dropdown';
 
-function App() {
-  const [jsonInput, setJsonInput] = useState('');
+const App = () => {
   const [response, setResponse] = useState(null);
-  const [error, setError] = useState('');
   const [selectedOptions, setSelectedOptions] = useState([]);
-  const [showDropdown, setShowDropdown] = useState(false);
 
-  const handleInputChange = (e) => {
-    setJsonInput(e.target.value);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
+  const handleFormSubmit = async (inputData) => {
     try {
-      const parsedInput = JSON.parse(jsonInput);
-      if (!parsedInput.data || !Array.isArray(parsedInput.data)) {
-        throw new Error('Invalid JSON format');
-      }
-      const res = await fetch('http://localhost:5000/bfhl', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(parsedInput),
-      });
-      const data = await res.json();
-      setResponse(data);
-      setShowDropdown(true);
-    } catch (err) {
-      setError('Invalid JSON format');
-      console.error(err);
+      const parsedData = JSON.parse(inputData);
+      const res = await axios.post('https://bajajfinserv-qualifier1-9.onrender.com/bfhl', parsedData);
+      setResponse(res.data);
+    } catch (error) {
+      console.error('API call failed');
     }
   };
 
-  const handleOptionChange = (e) => {
-    const value = e.target.value;
-    setSelectedOptions(
-      Array.from(e.target.selectedOptions, (option) => option.value)
-    );
+  const handleDropdownChange = (e) => {
+    const options = Array.from(e.target.selectedOptions, option => option.value);
+    setSelectedOptions(options);
   };
 
   const renderResponse = () => {
-    if (!response) return null;
-    let result = {};
-    if (selectedOptions.includes('Alphabets')) result.alphabets = response.alphabets;
-    if (selectedOptions.includes('Numbers')) result.numbers = response.numbers;
-    if (selectedOptions.includes('Highest alphabet')) result.highest_alphabet = response.highest_alphabet;
-
-    return (
-      <div>
-        {Object.entries(result).map(([key, value]) => (
-          <div key={key}>
-            <strong>{key}:</strong> {value.join(', ')}
-          </div>
-        ))}
-      </div>
-    );
+    if (response) {
+      return (
+        <div>
+          {selectedOptions.includes('alphabets') && response.alphabets && (
+            <div>Alphabets: {response.alphabets.join(', ')}</div>
+          )}
+          {selectedOptions.includes('numbers') && response.numbers && (
+            <div>Numbers: {response.numbers.join(', ')}</div>
+          )}
+          {selectedOptions.includes('highest_alphabet') && response.highest_alphabet && (
+            <div>Highest Alphabet: {response.highest_alphabet.join(', ')}</div>
+          )}
+        </div>
+      );
+    }
+    return null;
   };
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1>React JSON Processor</h1>
-        <form onSubmit={handleSubmit}>
-          <textarea
-            value={jsonInput}
-            onChange={handleInputChange}
-            placeholder='Enter JSON here, e.g., { "data": ["A","C","z"] }'
-          />
-          <button type="submit">Submit</button>
-        </form>
-        {error && <div className="error">{error}</div>}
-        {showDropdown && (
-          <select multiple={true} onChange={handleOptionChange}>
-            <option value="Alphabets">Alphabets</option>
-            <option value="Numbers">Numbers</option>
-            <option value="Highest alphabet">Highest alphabet</option>
-          </select>
-        )}
-        {renderResponse()}
-      </header>
+    <div>
+      <TextInput onSubmit={handleFormSubmit} />
+      <Dropdown
+        options={[
+          { value: 'alphabets', label: 'Alphabets' },
+          { value: 'numbers', label: 'Numbers' },
+          { value: 'highest_alphabet', label: 'Highest Alphabet' }
+        ]}
+        onChange={handleDropdownChange}
+      />
+      {renderResponse()}
     </div>
   );
-}
+};
 
 export default App;
+
