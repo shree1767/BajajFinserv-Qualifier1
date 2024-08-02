@@ -1,10 +1,5 @@
 {
   "type": "module",
-  "scripts": {
-    "backend": "nodemon backend/index.js",
-    "frontend": "npm start --prefix frontend",
-    "dev": "concurrently \"npm run frontend\"\npm run backend\""
-  },
   "dependencies": {
     "concurrently": "^8.2.2",
     "cookie-parser": "^1.4.6",
